@@ -1,0 +1,21 @@
+{
+  "asset_type": "static calendar transformation",
+  "valid_reference_month": "2024-10",
+  "previous_reference_month": "2024-09",
+  "series_fred": "CUSR0000SETB01",
+  "available_by": "2024-02-13",
+  "selection_not_before": "2024-10-31",
+  "gross_change_multiplier": 1.0103476989024887,
+  "rounding_only_multiplier_bounds": [
+    1.009816763733277,
+    1.0108786372833514
+  ],
+  "source_urls": [
+    "https://www.bls.gov/news.release/archives/cpi_02132024.htm",
+    "https://www.bls.gov/news.release/archives/cpi_11142023.htm",
+    "https://www.bls.gov/news.release/archives/cpi_12122023.htm",
+    "https://www.bls.gov/cpi/seasonal-adjustment/intervention-analysis-seasonal-adjustment-2024.htm"
+  ],
+  "license": "US federal public-domain numerical data",
+  "not_a_forecast_interval": true
+}

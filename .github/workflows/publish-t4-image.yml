@@ -1,0 +1,74 @@
+name: Publish reviewed T4 runtime
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Retrieve this exact public source commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --depth=1 origin "${GITHUB_SHA}"
+          git checkout --detach FETCH_HEAD
+      - name: Check reviewed source and build
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          root=pathlib.Path('runtime').resolve()
+          expected=json.loads(pathlib.Path('source-manifest.json').read_text())['files']
+          actual={}
+          for p in root.rglob('*'):
+              if p.is_symlink(): raise SystemExit('Source symlinks are forbidden')
+              if p.is_file(): actual[p.relative_to(root).as_posix()]=hashlib.sha256(p.read_bytes()).hexdigest()
+          assert actual==expected, 'Reviewed source manifest differs'
+          PY
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/t4-final-runtime"
+          TAG="universal-${GITHUB_SHA}"
+          printf 'IMAGE=%s\nTAG=%s\n' "$IMAGE" "$TAG" >> "$GITHUB_ENV"
+          docker pull --platform=linux/amd64 python@sha256:2325bb286ec344af3e5898cc224b5844e2707ac6e26b1632516fd3edc84a5e26
+          docker build --pull=false --network=none --platform=linux/amd64 \
+            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --tag "$IMAGE:$TAG" runtime
+          docker image inspect "$IMAGE:$TAG" > image-inspect.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('image-inspect.json'))[0]
+          assert d['Os']=='linux' and d['Architecture']=='amd64'
+          assert d['Config']['User']=='65534:65534'
+          assert not d['Config'].get('Volumes')
+          assert d['Config']['Labels']['qfbench2.interface_version']=='2.0'
+          PY
+          docker run --rm --pull=never --network=none --read-only \
+            --user 65534:65534 "$IMAGE:$TAG" analyze --help
+          docker run --rm --pull=never --network=none --read-only -i \
+            --user 65534:65534 "$IMAGE:$TAG" python -c '
+          import hashlib,json,pathlib,sys
+          expected=json.load(sys.stdin)["files"]
+          actual={}
+          for p in pathlib.Path("/opt/evidence/evidence_inference").rglob("*"):
+              if p.is_file():actual["evidence_inference/"+p.relative_to("/opt/evidence/evidence_inference").as_posix()]=hashlib.sha256(p.read_bytes()).hexdigest()
+          for k,p in [("analyze","/usr/local/bin/analyze"),("ARTIFACT_PROVENANCE.md","/opt/evidence/ARTIFACT_PROVENANCE.md"),("LICENSE","/opt/evidence/LICENSE")]:actual[k]=hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          assert actual=={k:v for k,v in expected.items() if k not in ["README.md","Dockerfile",".dockerignore"]}
+          ' < source-manifest.json
+      - name: Publish only the audited image
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker push "$IMAGE:$TAG"
+          docker image inspect "$IMAGE:$TAG" --format '{{json .RepoDigests}}'
+      - name: Remove runner registry login
+        if: always()
+        shell: bash
+        run: docker logout ghcr.io

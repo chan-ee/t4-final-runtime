@@ -1,0 +1,50 @@
+{
+  "schema_version": "1",
+  "model_kind": "two component median quantile linear models with empirical residual intervals",
+  "available_by": "2022-07-13",
+  "features": [
+    "latest_component_mom_pct_sa",
+    "sin_reference_month",
+    "cos_reference_month",
+    "observed_current_pump_mom_pct_nsa"
+  ],
+  "targets": {
+    "gasoline": {
+      "coef": [
+        0.009051317429044066,
+        -2.8504853776126966,
+        0.0,
+        1.0320133888643368
+      ],
+      "intercept": 0.13569733082948882,
+      "residual_lo": -2.7720972231005385,
+      "residual_hi": 3.0229103704956297
+    },
+    "energy": {
+      "coef": [
+        0.023991592522305583,
+        -1.611191372319368,
+        0.17801381898830054,
+        0.5094614440733164
+      ],
+      "intercept": 0.11905718839949316,
+      "residual_lo": -1.7860699768127148,
+      "residual_hi": 1.5401794045027561
+    }
+  },
+  "fit_samples": 53,
+  "calibration_samples": 12,
+  "fit_labels_available_by": "2017-01-18",
+  "calibration_labels_available_by": "2019-01-11",
+  "selection_labels_available_by": "2022-07-13",
+  "original_EIA_editions_available_by": "2022-07-07",
+  "interval_level": 0.9,
+  "interval_calibration_verified": false,
+  "historical_vintage_limit": "Source-edition eligibility verified before T4cutoff; each historical month-end firstpublication not completely certified.",
+  "provenance_sha256": {
+    "sources/eia-archive-audit.json": "c638b4c900bb399e404588fcfdf7c2d239edef7535806bddf382a6067fd073a5",
+    "sources/eia-archive-audit-selection.json": "556a1bd1de10b9b1cf3ba3d4dc4caf33fe50085fea6f475a66b0fcafdc0345f8",
+    "benchmarks/cpi-first-print-panel.json": "e0e08ab3abb35d36dac65df230f469d7cd840639617d30c5053442a20cb4a718",
+    "benchmarks/gas-bridge-fresh-results.json": "494b02f5df89d02a1bdeed25ce380d862ca07acafe16bddfdd148a9df396efb5"
+  }
+}

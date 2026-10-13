@@ -1,0 +1,219 @@
+{
+  "name": "evidence-inference-public-practice-calibration",
+  "version": "1",
+  "selection_information_available_by": "2024-12-03",
+  "heads": {
+    "rates": {
+      "family": "rates",
+      "name": "logm_action",
+      "feature_names": [
+        "intercept",
+        "policy_action_pct",
+        "log_maturity",
+        "action_log_maturity"
+      ],
+      "coefficients": [
+        99.94987147271837,
+        46.59982863029119,
+        -9.967002540990444,
+        -13.28933672132061
+      ],
+      "offset_feature": null,
+      "in_sample_residual_tails": [
+        -11.350042842427229,
+        6.815006642485002
+      ],
+      "fit_rows": 12,
+      "fitted_coefficients": 4,
+      "label_available_by": "2024-11-08",
+      "interval_method": "empirical invertedCDF5/95 same-fit residuals with numerical floors"
+    },
+    "auction": {
+      "family": "auction",
+      "name": "history6",
+      "feature_names": [
+        "intercept",
+        "mean6",
+        "last_minus_mean6",
+        "same_kind_minus_mean6",
+        "trend6",
+        "log_maturity"
+      ],
+      "coefficients": [
+        11.809535578355062,
+        -1.582045154463997,
+        30.408303181263523,
+        -14.539533399064613,
+        -108.23376382734716,
+        -2.620519216714734
+      ],
+      "offset_feature": null,
+      "in_sample_residual_tails": [
+        -0.05,
+        0.2541391037085434
+      ],
+      "fit_rows": 7,
+      "fitted_coefficients": 6,
+      "label_available_by": "2024-11-28",
+      "interval_method": "empirical invertedCDF5/95 same-fit residuals with numerical floors"
+    },
+    "cot": {
+      "family": "cot",
+      "name": "history7",
+      "feature_names": [
+        "intercept",
+        "net_pct_base_oi",
+        "weak_weekly_trend",
+        "horizon_scaled_change4",
+        "deviation26",
+        "horizon_weekly_vol",
+        "gross_pct_base_oi"
+      ],
+      "coefficients": [
+        6.751645394467974,
+        -0.036488620108390504,
+        -1.572153591945785,
+        0.04539742571551684,
+        0.31777340630571,
+        -2.211434115095654,
+        0.06990256320621892
+      ],
+      "offset_feature": null,
+      "in_sample_residual_tails": [
+        -5.093606700403166,
+        6.567369145196067
+      ],
+      "fit_rows": 10,
+      "fitted_coefficients": 7,
+      "label_available_by": "2024-12-03",
+      "interval_method": "empirical invertedCDF5/95 same-fit residuals with numerical floors"
+    },
+    "cpi": {
+      "family": "cpi",
+      "name": "AR6",
+      "feature_names": [
+        "intercept",
+        "last",
+        "lag2",
+        "lag3",
+        "lag4",
+        "lag5",
+        "lag6"
+      ],
+      "coefficients": [
+        0.18213564195863488,
+        0.2534489939157158,
+        -0.20063611577260562,
+        0.9338499300212214,
+        -1.752514993085258,
+        1.3517590014839167,
+        -0.6694689943207367
+      ],
+      "in_sample_residual_tails": [
+        -0.09442129736194255,
+        0.1163514786832689
+      ],
+      "fit_rows": 11,
+      "fitted_coefficients": 7,
+      "label_available_by": "2024-11-13"
+    },
+    "eps_growth": {
+      "form": "linear3",
+      "coefficients": [
+        0.24933460496134416,
+        0.7470458170994065,
+        0.24962542571739224
+      ],
+      "feature_names": [
+        "task_prior_target_eps",
+        "latest_eps",
+        "past_seasonal_difference_eps"
+      ],
+      "point_unit": "USD/share",
+      "residual_interval": {
+        "level": 0.9,
+        "lo_offset": -27.17544021546614,
+        "hi_offset": 10.24255785739059,
+        "offset_unit": "native_yoy_growth_pct",
+        "EPS_response_bounds_formula": "pointEPS + taskpriorEPS * native_offset /100",
+        "source": "empirical generalized-inverseCDF5/95 of same-fit localmodel practice residuals; not independentcalibration",
+        "conditional_coverage_verified": false,
+        "quantile_method": "inverted_cdf_with_predeclared_floor",
+        "offset_floor": 5.0,
+        "outward_endpoint_rounding": "nextafter(nextafter(point,-inf)+nextafter(lo_offset,-inf),-inf) for low; reverse infinities for high; native target units"
+      },
+      "fit_rows": 8,
+      "lambda": 0.01,
+      "fit_label_max_publication": "2024-10-16"
+    },
+    "eps_direction": {
+      "form": "linear3",
+      "coefficients": [
+        0.8836262109567791,
+        0.09329316548168058,
+        0.3803136112494855
+      ],
+      "feature_names": [
+        "task_prior_target_eps",
+        "latest_eps",
+        "past_seasonal_difference_eps"
+      ],
+      "point_unit": "USD/share",
+      "residual_interval": {
+        "level": 0.9,
+        "lo_offset": -1.3619141669371246,
+        "hi_offset": 0.32494819704255073,
+        "offset_unit": "USD/share",
+        "EPS_response_bounds_formula": "pointEPS + offset",
+        "source": "empirical generalized-inverseCDF5/95 of same-fit localmodel practice residuals; not independentcalibration",
+        "conditional_coverage_verified": false,
+        "quantile_method": "inverted_cdf_with_predeclared_floor",
+        "offset_floor": 0.1,
+        "outward_endpoint_rounding": "nextafter(nextafter(point,-inf)+nextafter(lo_offset,-inf),-inf) for low; reverse infinities for high; native target units"
+      },
+      "fit_rows": 6,
+      "lambda": 0.01,
+      "fit_label_max_publication": "2023-08-03"
+    },
+    "reaction": {
+      "family": "reaction",
+      "name": "reported_revenue_growth_affine",
+      "feature_names": [
+        "intercept",
+        "reported_revenue_growth_pct"
+      ],
+      "coefficients": [
+        0.7943327143979205,
+        0.7958538526953358
+      ],
+      "in_sample_residual_tails": [
+        -3.987684962846184,
+        2.0
+      ],
+      "fit_rows": 3,
+      "fitted_coefficients": 2,
+      "label_available_by": "2024-02-02"
+    },
+    "macro": {
+      "name": "source_release_horizon_direction",
+      "release_threshold": 2,
+      "early_sign": 1,
+      "late_sign": -1,
+      "chosen_after_practice_outcomes": true,
+      "label_available_by": "2024-11-27"
+    }
+  },
+  "practice_exception_units": [
+    "t4-fomc-curve-20220728",
+    "t4-fomc-curve-20240918",
+    "t4-auction-btc-202411-us7",
+    "t4-cotpos-202411-us10",
+    "t4-cpicomp-202410-us11",
+    "t4-eps-growth-2024Q3-banks",
+    "t4-eps-yoy-2023Q2-mixed",
+    "t4-macrorev-20240930-us6",
+    "t4-postearn-20240201-megacap"
+  ],
+  "policy_url": "https://github.com/Agenthon-2026/track4-analysis-public/issues/24#issuecomment-6001199755",
+  "scope": "Public Development in-sample exception; no independent prediction or conditional coverage claim; no task-answer lookup; inputs and citations remain frozen task/corpus."
+}
