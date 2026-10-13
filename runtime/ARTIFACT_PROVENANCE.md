@@ -143,3 +143,16 @@ The optional same-response `task_input_fields` protocol binds exact task-row key
 
 Independent synthetic input-contract counterexamples contain no resolved outcomes. The Windows Python 3.13.16 run passed the new 8 correctness tests and the existing 28 contract tests. Original resilience source hashes and learned-asset byte equality are recorded in the architecture audit. House calls, submission POSTs and external uploads are zero for this work. Restricted Linux runs, actual House, production NLI and official scores remain separate measurements.
 
+
+
+## Budget and native-output contract correctness continuation — 2026-10-13
+
+This publication freezes the independently reviewed budget runtime. The frozen universal parent, its public source commit 5cac6600dce92d86a66daabac25ebf856ba90ded and its submitted image are preserved. The only executable-source changes from that parent are native_bounds.py and single.py. Existing CPI and practice calibration artifacts, House client, model disclosures and inference evidence are unchanged.
+
+Selection basis is trusted output-unit precedence, context fit, primary/repair request accounting and explicit fallback coverage. Target/output prompt units govern native bounds before input-row units; unknown or conflicting units do not authorize a guessed conversion. The existing hard25 attempt limit remains. Planning reserves a repair request, preflights context splits, retains the whole task table when compacting does not improve usable coverage, and preserves exact original source cards. An engineering eight-row request ceiling is applied to primary and repair. It is not a measured4000-output-token serving guarantee.
+
+Correctness/resource tests use synthetic own-row features and synthetic original-source packets, without realized outcome labels. The final code passed35 bounded Linux cases;11 public control inputs/78 prediction arrays were exactly preserved. Independent review found and corrected a zero-budget divisor, inherited compact-repair row ceiling and unnecessary task compaction. Real House behavior, production NLI identity, predictive generalization and Final R are unmeasured by these local tests.
+
+Official Development982013 and historical ten-practice comparisons are recorded as diagnostics separately; they did not tune, choose, keep or drop these code changes or their engineering constants. Other retrospective outcome comparisons did not choose this continuation. The original artifact policy/disclosure and the named ten-practice first-publication exception above remain unchanged.
+
+The optional arithmetic decision-witness prototype is not integrated into this runtime and is not part of this image. This image makes no additional reason-only model request and adds no neural weights or outside inference evidence.

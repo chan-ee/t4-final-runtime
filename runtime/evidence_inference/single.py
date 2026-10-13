@@ -73,7 +73,7 @@ def metadata_matches(key, value, expected):
 
 
 def make_context(task, batch, packets, priors=None, *, include_controls=False, repair_diagnostics=None,
-                 accepted_peer_hypotheses=None):
+                 accepted_peer_hypotheses=None, compact_task=False):
     contracts = {}
     for entity in batch:
         contract = quantity_contract(task, entity)
@@ -98,7 +98,13 @@ def make_context(task, batch, packets, priors=None, *, include_controls=False, r
             card['source_ref'] = index[key]
             for k in ('doc_id','doc_date','span_start','span_end','text'): card.pop(k)
         shown[eid] = packet
-    result = {'task': task, 'requested_entities': batch, 'quantity_contracts': contracts,
+    # Large rosters can exhaust the request context before any evidence fits.
+    # Only this explicitly marked fallback view removes unrequested rows; the
+    # exact common task definition and each requested original row stay intact.
+    task_view = task
+    if compact_task:
+        task_view = {**task, 'entities': batch}
+    result = {'task': task_view, 'requested_entities': batch, 'quantity_contracts': contracts,
             'packets': shown, 'source_catalog': catalog,
             'prior_controls_visible': include_controls,
             'row_shape': {'entity_id': 'requested ID', 'use quantity_contract.response_field': {
@@ -108,6 +114,13 @@ def make_context(task, batch, packets, priors=None, *, include_controls=False, r
                 'uncertainty': 'Main uncertain assumption or alternative; maximum 200 characters',
                 'task_input_fields': 'Optional exact task-row keys actually used and named in mechanism; at most 12; no supplied values',
                 'premise_quote': 'Optional exact complete factual sentence/line from a selected card; maximum 240 characters'}}
+    if compact_task:
+        result['task_roster_view'] = {
+            'mode': 'exact_requested_rows_with_full_roster_ids',
+            'trusted_entity_ids': [entity['entity_id'] for entity in task['entities']],
+            'entity_count': len(task['entities']),
+            'scope': 'Unrequested task rows are omitted only to fit context/request limits. '
+                     'The caller retains every original row; split forecasts are not a certified joint forecast.'}
     if include_controls and priors is not None:
         result['whole_roster_prior_controls'] = {e['entity_id']:
             response_control(priors[e['entity_id']], quantity_contract(task,e)) for e in task['entities']}
@@ -194,18 +207,72 @@ def canonicalize_selected_sources(raw, shown_packet, local_packet, corpus, task,
 
 
 def context_batches(task, entities, packets, priors, maximum_rows, *, repair_diagnostics=None,
-                    accepted_peer_hypotheses=None):
+                    accepted_peer_hypotheses=None, compact_task=False):
     batches = []; current = []
     for entity in entities:
         proposed = current + [entity]
         chars = len(json.dumps(make_context(task, proposed, packets, priors, repair_diagnostics=repair_diagnostics,
-                                           accepted_peer_hypotheses=accepted_peer_hypotheses),
+                                           accepted_peer_hypotheses=accepted_peer_hypotheses,
+                                           compact_task=compact_task),
                                ensure_ascii=False, allow_nan=False, separators=(',', ':')))
         if current and (len(proposed) > maximum_rows or chars > 135000):
             batches.append(current); current = [entity]
         else: current = proposed
     if current: batches.append(current)
     return batches
+
+
+def bounded_context_batches(task, entities, packets, priors, maximum_rows, request_slots, *,
+                            repair_diagnostics=None, accepted_peer_hypotheses=None,
+                            compact_task=False):
+    """Preflight context and request counts; complete numeric fallbacks stay local.
+
+    Ordinary bounded batches remain byte-for-byte unchanged. On a large-roster
+    exception, use exact requested rows and an engineering eight-row output
+    bound, then reserve calls without pretending every entity received a model
+    forecast. No source spans are shortened or invented to force coverage.
+    """
+    request_slots=max(0,int(request_slots))
+    def build(compact,rows):
+        batches=context_batches(task,entities,packets,priors,rows,
+            repair_diagnostics=repair_diagnostics,
+            accepted_peer_hypotheses=accepted_peer_hypotheses,compact_task=compact)
+        chars=[len(json.dumps(make_context(task,batch,packets,priors,
+                repair_diagnostics=repair_diagnostics,
+                accepted_peer_hypotheses=accepted_peer_hypotheses,compact_task=compact),
+                ensure_ascii=False,allow_nan=False,separators=(',',':')))for batch in batches]
+        return batches,chars
+    # The per-call output allowance is finite even when input context fits.
+    # Eight rows is an engineering ceiling, not a tokenizer guarantee.
+    row_limit=min(8,max(1,int(maximum_rows)))
+    batches,chars=build(compact_task,row_limit)
+    original_count=len(batches)
+    if not compact_task and (len(batches)>request_slots or any(count>135000 for count in chars)):
+        candidate_batches,candidate_chars=build(True,row_limit)
+        def coverage(jobs,lengths):
+            fitting=[batch for batch,count in zip(jobs,lengths)if count<=135000]
+            return sum(len(batch)for batch in fitting[:request_slots])
+        # Keep the full table when dropping rows buys no usable coverage.
+        # In particular, a joint task retains comparators whenever they fit.
+        if (coverage(candidate_batches,candidate_chars)>coverage(batches,chars) or
+                sum(count>135000 for count in candidate_chars)<sum(count>135000 for count in chars) or
+                len(candidate_batches)<len(batches)):
+            compact_task=True
+            batches,chars=candidate_batches,candidate_chars
+    fitting=[batch for batch,count in zip(batches,chars)if count<=135000]
+    scheduled=fitting[:request_slots]
+    requested={entity['entity_id']for batch in scheduled for entity in batch}
+    deferred=[entity['entity_id']for entity in entities if entity['entity_id']not in requested]
+    diagnostic={'compact_task_view':compact_task,'request_slots':request_slots,
+        'original_planned_batches':original_count,'context_planned_batches':len(batches),
+        'scheduled_batches':len(scheduled),'scheduled_entities':len(requested),
+        'deferred_entity_ids':deferred,'oversized_context_batches':sum(count>135000 for count in chars),
+        'maximum_scheduled_rows':max((len(batch)for batch in scheduled),default=0),
+        'output_row_bound':8,
+        'output_bound_status':'Engineering row bound, not a serving-token guarantee.',
+        'scope':'The HouseClient still enforces the hard25 attempt limit; this preflight reserves calls '
+                'and reports local fallbacks, without certifying prediction quality.'}
+    return scheduled,diagnostic
 
 
 def decode_row(raw, task, entity, packet, corpus, prior):
@@ -310,10 +377,11 @@ def execute_single(task, active, full_packets, corpus, priors, results, views, r
     preferred=min(len(active),8)if joint else(1 if financial else 2)
     # Cover the primary roster within admitted-request limits while retaining
     # one repair opportunity. This is allocation, not an optimal latency claim.
-    primary_slots=max(1,remaining-1)
-    minimum_rows=max(1,math.ceil(len(active)/primary_slots))
+    primary_slots=max(0,remaining-1)if remaining>1 else remaining
+    minimum_rows=max(1,math.ceil(len(active)/max(1,primary_slots)))
     size=max(preferred,minimum_rows)
-    batches = context_batches(task, active, packets, priors, size)
+    batches,primary_preflight=bounded_context_batches(task,active,packets,priors,size,primary_slots)
+    context_modes={'single_forecast':primary_preflight['compact_task_view']}
     plan.update(protocol='single', phase='forecast', workers=4,
         source_policy='Original passages deduplicated per request; model priors omitted; entity source handles resolve locally.',
         requests=[], row_outcomes={}, response_issues={}, real_house_identity_verified=False,
@@ -322,16 +390,18 @@ def execute_single(task, active, full_packets, corpus, priors, results, views, r
         active_entities=len(active), adopted_entities=0, fallback_active_entities=len(active))
     plan['planned_forecast_batches'] = len(batches)
     plan['batch_allocation']={'remaining_request_slots':remaining,'preferred_rows':preferred,
-        'minimum_rows_for_primary_roster':minimum_rows,'maximum_rows_used':size,
+        'minimum_rows_for_primary_roster':minimum_rows,'maximum_rows_used':min(8,size),
         'joint_context_split':joint and len(batches)>1,
-        'scope':'Full task table remains visible; split forecasts are not certified joint samples or independent experts.'}
+        'scope':'Full task table remains visible for ordinary bounded requests; split forecasts are not certified joint samples or independent experts.',
+        'context_preflight':primary_preflight}
     repair_feedback = None
     repair_peers = None
 
     def request(batch, stage):
         context = make_context(task, batch, packets, priors,
                                repair_diagnostics=repair_feedback if stage == 'single_repair' else None,
-                               accepted_peer_hypotheses=repair_peers if stage == 'single_repair' else None)
+                               accepted_peer_hypotheses=repair_peers if stage == 'single_repair' else None,
+                               compact_task=context_modes.get(stage,False))
         prompt = json.dumps(context, ensure_ascii=False, allow_nan=False, separators=(',', ':'))
         record = {'stage': stage, 'rows_requested': len(batch), 'prompt_chars': len(prompt),
                   'request_context_sha256': digest(context), 'status': 'not_requested'}
@@ -398,9 +468,12 @@ def execute_single(task, active, full_packets, corpus, priors, results, views, r
         # Snapshot before repair workers start; a later repair cannot become
         # another worker's supposed primary-stage peer.
         repair_peers=copy.deepcopy(repair_peers)
-    repair = context_batches(task, missing, packets, priors, size, repair_diagnostics=repair_feedback,
-                             accepted_peer_hypotheses=repair_peers)
-    repair = repair[:max(0, client.max_calls - client.attempts)]
+    repair,repair_preflight=bounded_context_batches(task,missing,packets,priors,size,
+        max(0,client.max_calls-client.attempts),repair_diagnostics=repair_feedback,
+        accepted_peer_hypotheses=repair_peers,
+        compact_task=primary_preflight['compact_task_view'])
+    context_modes['single_repair']=repair_preflight['compact_task_view']
+    plan['repair_context_preflight']=repair_preflight
     if repair and not client.disabled and time.monotonic() + 10 < client.deadline:
         plan['phase'] = 'missing_rows_repair'; stage(repair, 'single_repair')
     parsed = sum(r.get('rows_parsed', 0) for r in plan['requests'])

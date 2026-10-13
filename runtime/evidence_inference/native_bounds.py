@@ -1,6 +1,7 @@
 """Respect explicit native scales; mentioning probability is not a range rule."""
 import math
 import re
+from .native_units import declared_native_unit, _normal
 
 
 def native_bounds(task,entity):
@@ -11,9 +12,12 @@ def native_bounds(task,entity):
                 type(v)not in(int,float)or not math.isfinite(v)for v in explicit)or explicit[0]>explicit[1]:
             raise ValueError('Malformed trusted target bounds')
         return tuple(map(float,explicit))
-    unit=next((x for x in(entity.get('unit'),entity.get('units'),target.get('unit'),target.get('units'))
-               if isinstance(x,str)and x.strip()),None)
-    unit=' '.join(unit.casefold().replace('_',' ').split())if unit else None
+    # The same target/prompt/row precedence defines both response units and
+    # range checks. Input-row units must not override an explicit output scale.
+    unit,status=declared_native_unit(task,entity)
+    if status.startswith('conflicting_') or status=='negated_output_unit_clause_unresolved':
+        return None
+    unit=_normal(unit)if unit else None
     name=str(target.get('name','')).casefold()
     probability=bool(re.search(r'probabilit|(?:^|[_-])(?:prob|chance|likelihood)(?:[_-]|$)',name))
     if re.search(r'probability_(?:change|delta|difference|growth)(?:_|$)|(?:change|delta|difference|growth)_(?:in_|of_)?probability',name):
