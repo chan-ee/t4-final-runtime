@@ -6,6 +6,7 @@ from .harness.contracts import digest
 from .harness.reasons import _resolve_refs
 from .final_policy import decision_exception
 from .reason_premise import validate_record
+from .decision_witness import validate_record as validate_witness_record
 
 
 def projection(row):
@@ -29,6 +30,14 @@ def build_ledger(task, results, packets, corpus):
         source_ids = decision.get("source_ids")
         refs = [{"entity_id": eid, "source_ids": source_ids}]
         try:
+            if decision.get('kind') == 'house_same_response':
+                decision = copy.deepcopy(decision)
+                witness = row.get('_decision_witness')
+                if witness is not None:
+                    decision['arithmetic_witness'] = validate_witness_record(witness, task, entity, row['point_forecast'])
+                    decision['arithmetic_witness_status'] = 'declared_arithmetic_verified_only'
+                else:
+                    decision['arithmetic_witness_status'] = 'absent_arithmetic_unverified'
             quote, citations, _ = _resolve_refs(refs, task, packets, corpus.docs)
             if decision.get('premise_fact') is not None and not validate_record(
                     decision['premise_fact'],source_ids,packets[eid],corpus):

@@ -156,3 +156,86 @@ Correctness/resource tests use synthetic own-row features and synthetic original
 Official Development982013 and historical ten-practice comparisons are recorded as diagnostics separately; they did not tune, choose, keep or drop these code changes or their engineering constants. Other retrospective outcome comparisons did not choose this continuation. The original artifact policy/disclosure and the named ten-practice first-publication exception above remain unchanged.
 
 The optional arithmetic decision-witness prototype is not integrated into this runtime and is not part of this image. This image makes no additional reason-only model request and adds no neural weights or outside inference evidence.
+
+
+## Final sprint correctness and resource continuation — 2026-10-13 KST
+
+This separate candidate preserves the public budget parent, commit
+79f4ae5d7b6a51fa5112e96e9cc081af7e6698c9 and submitted registry manifest
+sha256:b1e335c782a8a6f4769cbac502a047e882a34f8a76edfa39f190f4b84651f4a2.
+Only numerical.py, single.py and reason_compiler.py executable source changes.
+All historical models, coefficient assets, corpus rules, House client and model
+disclosures are unchanged. No new neural weights or outside inference facts enter.
+
+Selection rationale is correctness and resource accounting, without realized
+outcome labels. Fallback intervals report the trusted requested interval_level;
+point, endpoints, labels and metadata retain the published parent's calculations.
+This fixes contract alignment but does not calibrate interval coverage.
+
+When fitting batches exceed request slots, maximize covered row count and spread
+equally sized batches through input order. Ordinary fitting payloads remain the
+same, selected batch objects and original sources stay intact, and the full task
+comparison table remains whenever it fits. The existing eight-row engineering
+bound,25-attempt hard limit and24-primary/one-repair reservation remain. Input
+order coverage is not measured model delivery, predictive accuracy or hidden R.
+
+Reason compilation retains actual decision-generated prose when the sole local
+advisory finding is cap_answer_bytes. The public helper over-counts fields that a
+sealed grader may omit. A private auxiliary empty-row view checks reason, citation,
+deny-list and evidence limits; it is never the submitted answer and never guesses
+a sealed projection. Actual roster, source, cutoff and binding checks remain.
+The actual grader answer cap and Final R remain unknown. An actual cap overflow
+can still cause the organizer to award no R; predictions are not edited for it.
+
+Independent synthetic counterexamples and source review drove these changes.
+The two official Dev runs982013/982378 and leaderboard scores are diagnostics;
+they did not tune or choose new coefficients, source code or constants. The named
+ten-practice first-publication exception and existing training disclosures above
+remain unchanged. No other retrospective outcomes chose this continuation.
+
+The optional arithmetic witness and a general unknown-metric baseline expansion
+are not integrated. Local deterministic checks cannot establish actual House
+adoption, production NLI identity, hidden predictive generalization or Final R.
+This freeze itself makes no new public publication or evaluation upload.
+
+
+## Semantic contracts and same-response decision witness — 2026-10-13 KST
+
+This candidate extends the separately frozen sprint source. The budget public
+parent79f4ae5d7b6a51fa5112e96e9cc081af7e6698c9 and all prior frozen sources
+and evaluations are preserved. Existing numerical assets and coefficients,
+House client, cited corpus and historical model disclosures remain unchanged.
+
+Changes are selected on synthetic correctness counterexamples and resource
+rationale, with no realized outcome labels and no new fitted coefficients.
+Unrelated EPS inputs and token-overlap numeric history do not establish a native
+target metric, unit, period or accounting basis. The general fallback admits
+only resolved matching numeric references/history, and quarantines unsupported
+unit/period/basis or publication conflicts. Unknown quantities do not authorize
+a guessed conversion, reference field expansion or a remembered future value.
+
+Optional decision_witness is returned within the same House forecast response.
+Caller-owned EPS/yield references already resolved by quantity_contract identify
+the unit, basis and period. A future quantity remains an explicitly conditional
+assumption. Caller-owned affine conversion must reproduce the unchanged native
+point. An invalid witness suppresses only the contradicted explanation; an
+otherwise valid numerical forecast stays. Missing witness retains the existing
+unverified explanation policy. Generic, classification and ranking witnesses
+are not certified by this narrow path. No model-authored source-number semantic
+metadata or additional reason-only House call is accepted.
+
+The optional compact witness is bounded; numbers take priority in the prompt.
+Witness contracts are advertised only in batches of at most four rows, while
+the existing eight-row forecast request ceiling stays. Treasury witnesses
+require an explicit Treasury constant-maturity definition and matching basis;
+policy-rate coordinates do not acquire that basis from a supplied yield field.
+Existing source handles, actual forecast shape, source/cutoff/deny/cap bindings
+and25-attempt accounting remain. Synthetic output sizes are not measured4000
+token House conformance. Arithmetic equality does not prove causal correctness,
+actual use of a premise, hidden predictive quality or official reasoning R.
+
+Source selection does not use new Development results to fit, choose or keep
+code or constants. The named ten-practice first-publication exception and model
+training disclosures above remain. Other retrospective outcomes do not select
+this continuation. Public Dev testing is an additional execution/contract check;
+Final is explicitly held and not submitted by this publication or packaging.

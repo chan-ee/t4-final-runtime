@@ -1,10 +1,13 @@
 {
-  "candidate": "evidence-inference-final-budget-published-20261013",
-  "parent_tested_candidate": "evidence-inference-final-budget-20261013",
+  "candidate": "evidence-inference-final-semantic-reviewed-20261013",
+  "frozen_at_utc": "2026-10-13T11:07:09.240688+00:00",
+  "parent_candidate": "evidence-inference-final-sprint-20261013",
+  "base_public_commit": "79f4ae5d7b6a51fa5112e96e9cc081af7e6698c9",
+  "source_file_count": 62,
   "files": {
     ".dockerignore": "32f3eb4e8c5e104fe87cafe9d7125a49bdf456039da869781e38c4166bb08710",
     "analyze": "e56ce7a29ce2ddccb4be90795262bab329ec8730a783d1541ead24a28db01ab0",
-    "ARTIFACT_PROVENANCE.md": "eeb2152314142d190375d42e591b3ace0d70f4657be45b25ae0709a6f36c8a3d",
+    "ARTIFACT_PROVENANCE.md": "7e8a4852f841f53ccdefcaee6c3b5ee4d0066e44328788ce6342edea1bcb7c05",
     "Dockerfile": "7439eae8b691bda93b2bed315ad3f8e0f12ca63d79ffaac098f468d405ddad16",
     "evidence_inference/__init__.py": "bd2a7e8cd7bfdbbc87939fb5b84c30680fa16cc2d88236ac4e1553847f41d4a3",
     "evidence_inference/assets/cpi-calendar-2024.json": "06b6a5a7551dc51eb69bf4ba72bdd803e901f7966056e364cd316f225d7f3d46",
@@ -17,7 +20,8 @@
     "evidence_inference/corpus.py": "4ae24e6a46c32a0d4737f83af91b6e516292f7b1d5b02635b85ae97bdade3cdd",
     "evidence_inference/cpi_predictor.py": "1df0ad4d0dbcab1bc0e93e7335c916b224a5f0c98c2e30b942ee8b15c0df5cab",
     "evidence_inference/credit_context.py": "1cea725816f8768ed4b6b4a11a1180620007698738ccc60c7ecea50c530b4179",
-    "evidence_inference/decision_ledger.py": "1a2f46b87e30a48a5fa45a1c146accc292e69b08eb04900646d7a97d658427e9",
+    "evidence_inference/decision_ledger.py": "471568f23afead129df889c289a2bcf3361156710ef3d6e2118352f82890488c",
+    "evidence_inference/decision_witness.py": "1b9552dd7f3c4de3ac96bc332f3489d5151fe520d29a35b6d7f3a2a67999f399",
     "evidence_inference/decisions.py": "27b6b6392d83f06351a177786c7a23ff786084f9c6a56e6e0d9103f201e99597",
     "evidence_inference/deliberation.py": "d1e66851c29635ed3e6ae5aec9f231787cd4f3ec84dbfd2ece8fa717db542ed6",
     "evidence_inference/delivery_gate.py": "6915cad310de4ed943ab346bd909226ab09271611eb83a3ff3472a83a7fa4539",
@@ -40,8 +44,9 @@
     "evidence_inference/measurement_links.py": "0559b41dedbb388c63fd56ef88128add4cdaddf3fd01c0fa42d824eb07e31e7e",
     "evidence_inference/measurement_state.py": "94d11dd5a7d7ae31fb93aa5ebf460ad91bee04bdb3de35c4c06d5670c6784bfa",
     "evidence_inference/native_bounds.py": "9dc24cb25e1b5077d85877db94e2e52bb412e6e5010b69e7de982b0ead30ce27",
+    "evidence_inference/native_reference.py": "6c4825b0298a6938b29980acd2a3e8592d52ebb31ad36d7b2f54db2ea2f93cb3",
     "evidence_inference/native_units.py": "6f339a04c6a7cdee10f2201e0fc78b2716e9be35f488d89e2884d669fd57b51f",
-    "evidence_inference/numerical.py": "65d188665dbe13f649d299dbe181a5dcbff0df0f1c3f6c11b0ffab930d50f868",
+    "evidence_inference/numerical.py": "8e22d1a9c8528905089e921c7f2285e25d77cb36547f5cf5b0e80bec12892264",
     "evidence_inference/numerical_context.py": "c1f913ba5329f147704a94172452c004c809f7ac70980ff76ca80bb0d66557bc",
     "evidence_inference/numerical_priors.py": "90e0680315e02848e00f697d433205987102d01a44c3651118eb2725652839a4",
     "evidence_inference/packets.py": "951c45ef783accc076ffae2e8e7c2f575bbb59f2145a7974670ef63cca0a0ab3",
@@ -52,25 +57,32 @@
     "evidence_inference/priors.py": "f87c2fa0c08c36ebe77e8ea5feedf21b168dafaee8335eec000d8a8ad683c314",
     "evidence_inference/quantity.py": "e6c9052df98995313ba37e327e4e234bda184b8b38af5f58454fef3fbaa8bf9e",
     "evidence_inference/reaction_context.py": "9b63d01ac8b2ff8e38714def53f3264ffe2656860f9d1235fdb208965ec28272",
-    "evidence_inference/reason_compiler.py": "f339a3c492d80fe7cb42fb0d24ccfd62047320ddd2782cb38eae0a4a9a6f8cb1",
+    "evidence_inference/reason_compiler.py": "94efd41c5737d1f752ec9cbf31039efaa65d484e22091235becf834ebea2b836",
     "evidence_inference/reason_premise.py": "38bd5540b657899f864d30f01879faeaa241b1ca9f8a54a0a9626a812d527de5",
     "evidence_inference/reason_task_inputs.py": "73f597ff36e26650f7519a5efa1141d8c8fdd3736eac40d99991b685a233d77b",
     "evidence_inference/runner.py": "7672b8385ce3190b596db327c145e79f01a27b82ebd7a51e2ab25b4ed9d80ad6",
-    "evidence_inference/single.py": "e4075c666f07f82ab0531a5c4d6c8ba4ec326940070b84092829212444409020",
+    "evidence_inference/single.py": "47a7669cc0a946f3eb7aa4e61ee1e47927bd8d64a2743fbe63e2a8078273f27e",
     "evidence_inference/target_context.py": "9becb59cbc68779a4bbbead26ebbc61407d499b4fd28c1db8484861b70c329cb",
     "evidence_inference/task_evidence.py": "9052042d21b4c8f0ecd5a09dd0d7cb8b29279ce819bf12e418cd2ab30a478afc",
     "evidence_inference/typed_eps.py": "e70358a219c4102dc9cc1b6f66188afc1762d153811047cb869bea7706343cef",
     "LICENSE": "c7c95d245755e0d5f403d617f8159809591fe9ac985331fbd3ea2136f7e3f159",
     "README.md": "7ee4e5d96863d3c5d616d8f1020a394b6e1cbfc1ca125664b6e986eb06fd69f5"
   },
-  "scope": "Approved runtime only; budget executable code exactly matches tested source, with dated provenance incorporated; no private results/auth/reason prototype",
-  "tested_linux_cases": 35,
-  "baseline_submission_id": 982013,
-  "publication_review_code_changes": [
-    "evidence_inference/native_bounds.py",
+  "executable_changes_from_sprint": [
+    "evidence_inference/decision_ledger.py",
+    "evidence_inference/decision_witness.py",
+    "evidence_inference/native_reference.py",
+    "evidence_inference/numerical.py",
+    "evidence_inference/reason_compiler.py",
     "evidence_inference/single.py"
   ],
-  "publication_metadata_changes": [
-    "ARTIFACT_PROVENANCE.md"
-  ]
+  "metadata_change": "ARTIFACT_PROVENANCE.md",
+  "source_selection_basis": [
+    "synthetic contract correctness",
+    "source and decision binding",
+    "bounded same-response witness resources"
+  ],
+  "actual_House_verified": false,
+  "actual_Final_R_measured": false,
+  "Final_uploads": 0
 }

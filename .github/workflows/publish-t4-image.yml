@@ -34,7 +34,7 @@ jobs:
           assert actual==expected, 'Reviewed source manifest differs'
           PY
           IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/t4-final-runtime"
-          TAG="budget-${GITHUB_SHA}"
+          TAG="semantic-${GITHUB_SHA}"
           printf 'IMAGE=%s\nTAG=%s\n' "$IMAGE" "$TAG" >> "$GITHUB_ENV"
           docker pull --platform=linux/amd64 python@sha256:2325bb286ec344af3e5898cc224b5844e2707ac6e26b1632516fd3edc84a5e26
           docker build --pull=false --network=none --platform=linux/amd64 \

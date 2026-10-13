@@ -1,13 +1,16 @@
 """Compile actual decision records to the optional official reason contract.
 
-Grouping never silently drops part of a roster. A group exceeding published
-caps is omitted with diagnostics. Local checks cannot certify hidden-reason
-coverage, causal correctness, Final NLI or official R.
+Grouping never silently drops part of a roster. Reason, citation and evidence
+caps remain strict. An answer-only advisory over-count does not remove otherwise
+valid prose: the actual grader's sealed answer projection remains authoritative.
+Local checks cannot certify that answer cap, hidden-reason coverage, causal
+correctness, Final NLI or official R.
 """
 from .harness import official_reason_rail as rail
 from .harness.contracts import digest
 from .harness.reasons import _rail_docs
 import json
+from .decision_witness import render_parts as witness_parts, validate_record as validate_witness_record
 
 
 def number(value):
@@ -104,7 +107,13 @@ def pieces(entry):
         premise = f"{eid}: " + decision.get('premise_fact',{}).get('quote',entry["source_quote"])
         if decision.get("task_inputs"):
             premise += " Task inputs: " + decision["task_inputs"]
-        return premise, f"{eid}: {mechanism}", implication(entry)
+        consequence = implication(entry)
+        if decision.get('arithmetic_witness') is not None:
+            observed, conditional, arithmetic = witness_parts(decision['arithmetic_witness'])
+            premise += ' ' + observed
+            mechanism += ' ' + conditional
+            consequence += '; declared native-point bridge ' + arithmetic + '. Label, ordering and interval derivation are unverified.'
+        return premise, f"{eid}: {mechanism}", consequence
     raise ValueError("unsupported_decision_kind")
 
 
@@ -115,18 +124,22 @@ def make_reason(entries, reason_id):
     if entries[0]['decision']['kind']=='house_same_response':
         # Shared original passages and identical inferential links are stated
         # once with every affected entity named. No source span/text is edited.
-        source_groups={};link_groups={};task_input_groups={}
+        source_groups={};link_groups={};task_input_groups={};witness_premises=[]
         for entry in entries:
             eid=entry['entity_id'];decision=entry['decision']
             source_groups.setdefault(decision.get('premise_fact',{}).get('quote',entry['source_quote']),[]).append(eid)
             text=decision['mechanism']
             if decision.get('assumptions'):
                 text+=' Assumptions: '+'; '.join(decision['assumptions'])
+            if decision.get('arithmetic_witness') is not None:
+                observed, conditional, _ = witness_parts(decision['arithmetic_witness'])
+                witness_premises.append(eid+': '+observed)
+                text+=' '+conditional
             link_groups.setdefault(text,[]).append(eid)
             if decision.get('task_inputs'):
                 task_input_groups.setdefault(decision['task_inputs'],[]).append(eid)
         task_inputs=[','.join(ids)+': task inputs '+text for text,ids in task_input_groups.items()]
-        premises=[','.join(ids)+': '+text for text,ids in source_groups.items()]+task_inputs
+        premises=[','.join(ids)+': '+text for text,ids in source_groups.items()]+task_inputs+witness_premises
         mechanisms=[','.join(ids)+': '+text for text,ids in link_groups.items()]
     if entries[0]['decision']['kind']=='house_eps_adjustments':
         mechanisms.append("Code sums conditional EPS deltas with the eligible statistical anchor, then converts to percent growth against task prior EPS. These deltas are uncertain estimates, not observed source amounts; future coverage is unverified.")
@@ -142,27 +155,121 @@ def make_reason(entries, reason_id):
             "scope": {"entities": [e["entity_id"] for e in entries]}, "citations": citations}
 
 
+def _reason_preflight(answer, docs, cutoff, actual_ids):
+    """Check actual scopes, and isolate only the advisory answer-size finding.
+
+    The empty-row view is internal and never becomes an answer. It checks only
+    the reason/citation/deny-list resource rules, without guessing a sealed key
+    or implying that the organizer can judge the actual answer.
+    """
+    reasons = answer.get("submitted_reasons")
+    if not isinstance(reasons, list):
+        return ["invalid_reason_list"], {"status": "invalid_reason_list"}
+    for reason in reasons:
+        if not isinstance(reason, dict):
+            return ["invalid_reason_object"], {"status": "invalid_reason_object"}
+        scope = reason.get("scope")
+        if not isinstance(scope, dict):
+            return ["invalid_reason_scope"], {"status": "invalid_reason_scope"}
+        ids = scope.get("entities")
+        if (not isinstance(ids, list) or not ids
+                or any(not isinstance(e, str) or not e for e in ids)
+                or len(set(ids)) != len(ids) or not set(ids) <= actual_ids):
+            return ["invalid_actual_reason_scope"], {"status": "invalid_actual_reason_scope"}
+    findings = rail.check_submitted_reasons(answer, docs, cutoff)
+    codes = [f.code for f in findings]
+    diagnostic = {"actual_grader_answer_cap_certified": False,
+                  "actual_answer_cap_unknown": True,
+                  "auxiliary_view_never_submitted": True}
+    if findings and any(code != "cap_answer_bytes" for code in codes):
+        diagnostic.update(status="known_reason_rail_failure", codes=codes)
+        return codes, diagnostic
+    checking = answer
+    if findings:
+        checking = dict(answer, entity_predictions=[])
+        reason_findings = rail.check_submitted_reasons(checking, docs, cutoff)
+        if reason_findings:
+            codes = [f.code for f in reason_findings]
+            diagnostic.update(status="known_reason_only_failure", codes=codes)
+            return codes, diagnostic
+        diagnostic.update(status="actual_answer_cap_unknown", advisory_codes=codes)
+    else:
+        diagnostic["status"] = "local_advisory_passed"
+    plan = rail.reasons_judged(checking, docs, cutoff)
+    if any(not entry["judged"] for entry in plan):
+        diagnostic.update(status="local_reason_only_plan_refused", reason_only_plan=plan)
+        return ["local_reason_only_plan_refused"], diagnostic
+    diagnostic["reason_only_plan"] = plan
+    return [], diagnostic
+
+
 def compile_reasons(task, final_answer, ledger, corpus):
-    predictions = final_answer["entity_predictions"]
-    before = digest(predictions)
     diagnostics = {"accepted": 0, "groups": [], "covered_entities": [],
                    "official_reasoning_grade_measured": False,
+                   "actual_grader_answer_cap_certified": False,
+                   "actual_answer_cap_unknown": True,
+                   "advisory_answer_cap_overflow": False,
                    "scope": "decision consistency, source provenance and published local shape/caps only"}
-    if ledger["task_digest"] != digest(task):
+    predictions = final_answer.get("entity_predictions") if isinstance(final_answer, dict) else None
+    task_rows = task.get("entities") if isinstance(task, dict) else None
+    if (not isinstance(predictions, list) or not isinstance(task_rows, list) or not task_rows
+            or any(not isinstance(row, dict) or not isinstance(row.get("entity_id"), str)
+                   or not row["entity_id"] for row in predictions + task_rows)):
+        diagnostics["context_error"] = "invalid_final_roster"
+        return [], diagnostics
+    actual_ids = [row["entity_id"] for row in predictions]
+    task_ids = [row["entity_id"] for row in task_rows]
+    if (len(set(actual_ids)) != len(actual_ids) or len(set(task_ids)) != len(task_ids)
+            or set(actual_ids) != set(task_ids)):
+        diagnostics["context_error"] = "invalid_final_roster"
+        return [], diagnostics
+    if not isinstance(ledger, dict) or not isinstance(ledger.get("entries"), list):
+        diagnostics["context_error"] = "invalid_decision_ledger"
+        return [], diagnostics
+    try:
+        before = digest(predictions)
+        task_digest = digest(task)
+    except (ValueError, TypeError, OverflowError):
+        diagnostics["context_error"] = "invalid_reason_context"
+        return [], diagnostics
+    if ledger.get("task_digest") != task_digest:
         diagnostics["context_error"] = "task_changed"
         return [], diagnostics
     rows = {row["entity_id"]: row for row in predictions}
-    if len(rows) != len(predictions) or set(rows) != {e["entity_id"] for e in task["entities"]}:
-        diagnostics["context_error"] = "invalid_final_roster"
-        return [], diagnostics
-    groups = {}
+    groups, seen_entries = {}, set()
     for entry in ledger["entries"]:
+        if (not isinstance(entry, dict) or not isinstance(entry.get("entity_id"), str)
+                or entry["entity_id"] not in rows or entry["entity_id"] in seen_entries
+                or not isinstance(entry.get("decision"), dict)
+                or not isinstance(entry["decision"].get("kind"), str)
+                or not isinstance(entry["decision"].get("method", "joint"), str)):
+            diagnostics["context_error"] = "invalid_decision_ledger"
+            return [], diagnostics
         eid = entry["entity_id"]
+        seen_entries.add(eid)
+        try:
+            if not isinstance(entry.get("answer"), dict):
+                raise ValueError("invalid_cached_decision_answer")
+            cached_answer_digest = digest(entry["answer"])
+        except (ValueError, TypeError, OverflowError):
+            diagnostics["context_error"] = "invalid_cached_decision_answer"
+            return [], diagnostics
+        if cached_answer_digest != entry.get("answer_digest"):
+            diagnostics["context_error"] = "cached_decision_answer_changed"
+            return [], diagnostics
+        witness = entry['decision'].get('arithmetic_witness')
+        if witness is not None:
+            try:
+                entity = next(e for e in task_rows if e['entity_id'] == eid)
+                validate_witness_record(witness, task, entity, rows[eid]['point_forecast'])
+            except (ValueError, TypeError, KeyError, OverflowError):
+                diagnostics['context_error'] = 'arithmetic_witness_record_changed'
+                return [], diagnostics
         projected = {k: rows[eid][k] for k in ("entity_id", "label", "point_forecast", "interval") if k in rows[eid]}
-        if digest(projected) != entry["answer_digest"]:
+        if digest(projected) != entry.get("answer_digest"):
             diagnostics["context_error"] = "answer_changed_after_decision"
             return [], diagnostics
-        key = entry["decision"]["kind"], entry["decision"].get("method", "joint")
+        key = entry["decision"].get("kind"), entry["decision"].get("method", "joint")
         groups.setdefault(key, []).append(entry)
     reasons = []
     docs = _rail_docs(corpus.docs)
@@ -170,32 +277,33 @@ def compile_reasons(task, final_answer, ledger, corpus):
     def checked(entries):
         try:
             reason = make_reason(entries, "r" + str(len(reasons) + 1))
-        except ValueError as exc:
-            return None, [str(exc)]
+        except (ValueError, TypeError, KeyError, OverflowError) as exc:
+            return None, [str(exc)], {}
         proposed = dict(final_answer, submitted_reasons=reasons + [reason])
-        findings = rail.check_submitted_reasons(proposed, docs, task["cutoff_date"])
-        plan = rail.reasons_judged(proposed, docs, task["cutoff_date"])
-        if findings or any(not p["judged"] for p in plan):
-            return None, [f.code for f in findings] or ["local_judged_plan_refused"]
-        return reason, []
+        errors, preflight = _reason_preflight(proposed, docs, task["cutoff_date"], set(rows))
+        if errors:
+            return None, errors, preflight
+        return reason, [], preflight
 
     def commit(entries):
         ids = [e["entity_id"] for e in entries]
         if len(reasons) >= rail.MAX_REASONS:
             diagnostics["groups"].append({"entities": ids, "status": "omitted_unit_reason_count_cap"})
             return
-        reason, errors = checked(entries)
+        reason, errors, preflight = checked(entries)
         if errors:
             diagnostics["groups"].append({"entities": ids, "status": "omitted_local_rail_findings", "codes": errors})
             return
         reasons.append(reason)
         diagnostics["covered_entities"].extend(ids)
-        diagnostics["groups"].append({"entities": ids, "status": "accepted"})
+        diagnostics["groups"].append({"entities": ids, "status": "accepted", "local_reason_rail": preflight})
+        if preflight.get("status") == "actual_answer_cap_unknown":
+            diagnostics["advisory_answer_cap_overflow"] = True
 
     for entries in groups.values():
         # The total 6500-byte unit cap cannot be avoided by dividing the prose.
         # Reuse a common statistical mechanism once instead of per-entity padding.
-        reason, errors = checked(entries)
+        reason, errors, _ = checked(entries)
         if not errors:
             commit(entries)
             continue
@@ -203,11 +311,11 @@ def compile_reasons(task, final_answer, ledger, corpus):
         # decisions. Nothing is clipped, and every omitted entity is reported.
         pending = []
         for entry in entries:
-            _, single_errors = checked([entry])
+            _, single_errors, _ = checked([entry])
             if single_errors:
                 commit([entry])
                 continue
-            _, proposed_errors = checked(pending + [entry])
+            _, proposed_errors, _ = checked(pending + [entry])
             if proposed_errors and pending:
                 commit(pending)
                 pending = []
